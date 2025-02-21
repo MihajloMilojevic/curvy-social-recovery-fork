@@ -2,8 +2,9 @@ package commands
 
 import (
 	"encoding/json"
-	keyrecovery "github.com/0x3327/curvy-social-recovery/key_recovery"
 	"os"
+
+	keyrecovery "github.com/0x3327/curvy-social-recovery/key_recovery"
 )
 
 type ShareFile struct {

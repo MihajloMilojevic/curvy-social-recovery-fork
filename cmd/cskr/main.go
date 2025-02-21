@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/0x3327/curvy-social-recovery/internal/cskr/commands/recoverCmd"
-	"github.com/0x3327/curvy-social-recovery/internal/cskr/commands/splitCmd"
-	"github.com/urfave/cli/v3"
 	"io"
 	"log"
 	"os"
+
+	"github.com/0x3327/curvy-social-recovery/internal/cskr/commands/recoverCmd"
+	"github.com/0x3327/curvy-social-recovery/internal/cskr/commands/splitCmd"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
