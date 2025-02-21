@@ -2,7 +2,10 @@ module github.com/0x3327/curvy-social-recovery
 
 go 1.22.5
 
-require github.com/consensys/gnark-crypto v0.16.0
+require (
+	github.com/consensys/gnark-crypto v0.16.0
+	github.com/urfave/cli/v3 v3.0.0-beta1
+)
 
 require (
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
