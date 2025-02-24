@@ -29,5 +29,5 @@ func (k *KeyFile) WriteFile(path string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, os.ModePerm)
+	return os.WriteFile(path, data, 0666)
 }

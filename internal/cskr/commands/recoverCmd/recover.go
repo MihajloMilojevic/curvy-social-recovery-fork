@@ -15,6 +15,7 @@ import (
 const (
 	outputFlag    = "output"
 	thresholdFlag = "threshold"
+	patternFlag   = "pattern"
 )
 
 func NewCommand() *cli.Command {
@@ -36,6 +37,12 @@ func NewCommand() *cli.Command {
 				Required:  true,
 				Validator: thresholdValidator,
 			},
+			&cli.StringFlag{
+				Name:    patternFlag,
+				Aliases: []string{"p"},
+				Usage:   "Pattern for matching share files",
+				Value:   "share*.json",
+			},
 		},
 		Action: recoverKey,
 	}
@@ -56,7 +63,8 @@ func recoverKey(_ context.Context, cmd *cli.Command) error {
 	}
 
 	// Find and print out all žson files in dir
-	shareFilePaths, err := filepath.Glob(filepath.Join(sharePath, "*.json"))
+	sharePattern := cmd.String(patternFlag)
+	shareFilePaths, err := filepath.Glob(filepath.Join(sharePath, sharePattern))
 	if err != nil {
 		return fmt.Errorf("unable to find shares: %w", err)
 	}
