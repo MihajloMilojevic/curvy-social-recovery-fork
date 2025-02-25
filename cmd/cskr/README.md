@@ -10,3 +10,5 @@
 2. `go install ./cmd/cskr`
 
 ## Documentation
+
+Use the `-h` flag or read the [docs](./docs.md).
