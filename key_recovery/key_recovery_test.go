@@ -1,11 +1,14 @@
 package keyrecovery
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"testing"
 
 	BN254_fr "github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	SECP256K1_fr "github.com/consensys/gnark-crypto/ecc/secp256k1/fr"
+	MT "github.com/txaty/go-merkletree"
 )
 
 func TestSplitAndRecover(t *testing.T) {
@@ -262,4 +265,93 @@ func setupRandomShares(n, threshold int) ([]Share, string, string, error) {
 	}
 
 	return shares, spendingKeyStr, viewingKeyStr, nil
+}
+
+// MERKLE TREE TESTS
+
+func TestMerkleProofs(t *testing.T) {
+	n := 20
+	threshold := 14
+
+	shares, sk, vk, err := setupRandomShares(n, threshold)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root, merkleShares, err := GenerateMerkleShares(shares)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("Merkle root: %s\n", root)
+
+	t.Run("Verify merkle proofs", func(t *testing.T) {
+		for _, merkleShare := range merkleShares {
+			ok, err := VerifyMerkleProof(root, &merkleShare.Proof, merkleShare.Share)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !ok {
+				t.Fatal("Merkle proof verification failed")
+			}
+		}
+	})
+
+	t.Run("Verify merkle proofs with tampered share", func(t *testing.T) {
+		merkleShare := merkleShares[0]
+		merkleShare.Share.Point = "0"
+		ok, err := VerifyMerkleProof(root, &merkleShare.Proof, merkleShare.Share)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ok {
+			t.Fatal("Merkle proof verification succeeded with tampered share")
+		}
+	})
+
+	t.Run("Verify merkle proofs with tampered proof", func(t *testing.T) {
+		merkleShare := merkleShares[0]
+		merkleShare.Proof = MT.Proof{Siblings: merkleShare.Proof.Siblings[1:], Path: merkleShare.Proof.Path + 1}
+
+		ok, err := VerifyMerkleProof(root, &merkleShare.Proof, merkleShare.Share)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ok {
+			t.Fatal("Merkle proof verification succeeded with tampered proof")
+		}
+	})
+	t.Run("Verify merkle proofs with tampered root", func(t *testing.T) {
+		merkleShare := merkleShares[0]
+		randomBytes := make([]byte, 32)
+		_, err := rand.Read(randomBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		newRoot := hex.EncodeToString(randomBytes)
+		ok, err := VerifyMerkleProof(newRoot, &merkleShare.Proof, merkleShare.Share)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ok {
+			t.Fatal("Merkle proof verification succeeded with tampered root")
+		}
+	})
+
+	t.Run("Verify reconstructed keys", func(t *testing.T) {
+		shares := make([]Share, threshold)
+		for i := 0; i < threshold; i++ {
+			shares[i] = merkleShares[i].Share
+		}
+		newSpendingKeyStr, newViewingKeyStr, err := Recover(threshold, shares)
+		if err != nil {
+			t.Fatalf("Failed to recover the shares: %s", err)
+		}
+		if newSpendingKeyStr != sk {
+			t.Error("Spending keys do not match")
+		}
+		if newViewingKeyStr != vk {
+			t.Error("Viewing keys do not match")
+		}
+	})
 }

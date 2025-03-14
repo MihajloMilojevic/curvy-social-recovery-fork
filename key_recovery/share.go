@@ -5,3 +5,7 @@ type Share struct {
 	SpendingEval string
 	ViewingEval  string
 }
+
+func (s *Share) Serialize() ([]byte, error) {
+	return []byte(s.Point + s.SpendingEval + s.ViewingEval), nil
+}
